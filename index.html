@@ -22,7 +22,7 @@
     --pink:#F2A9C4;
     --pink-deep:#E8799F;
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body,.wrap{margin:0;padding:0;}
   .wrap{
     background:var(--bg);
@@ -41,7 +41,7 @@
   .weektab{
     flex:0 0 auto;padding:7px 14px;border-radius:999px;border:1.5px solid var(--pink);
     background:#fff;color:var(--pink-deep);font-size:12.5px;font-weight:600;cursor:pointer;
-    -webkit-tap-highlight-color:transparent;user-select:none;
+    user-select:none;
   }
   .weektab.active{background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);}
   .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
@@ -67,28 +67,38 @@
     display:flex;justify-content:space-between;align-items:center;
     padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:2px;
   }
-  .addlink{font-size:11px;font-weight:600;color:var(--pink-deep);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .addlink{font-size:11px;font-weight:600;color:var(--pink-deep);cursor:pointer;}
   .chip{
-    border-radius:9px;padding:7px 8px;font-size:11.5px;line-height:1.35;
-    cursor:grab;touch-action:none;position:relative;border:1px solid rgba(0,0,0,0.04);
+    border-radius:9px;padding:9px 8px;font-size:11.5px;line-height:1.35;
+    position:relative;border:1px solid rgba(0,0,0,0.04);
     display:flex;gap:6px;align-items:flex-start;
+    touch-action:pan-y;
+    transition:transform .12s;
   }
-  .chip.dragging{opacity:0.25;}
-  .chip .box{
-    flex:0 0 14px;width:14px;height:14px;border-radius:4px;border:1.5px solid rgba(75,21,40,0.35);
-    margin-top:1px;background:#fff;
+  .chip.dragging{opacity:0.3;}
+  .chip.liftready{transform:scale(1.03);box-shadow:0 4px 14px rgba(75,21,40,0.18);}
+  .boxwrap{
+    flex:0 0 30px;width:30px;height:26px;display:flex;align-items:flex-start;justify-content:center;
+    margin:-8px 0 -8px -6px;padding:8px 4px 8px 6px;
+  }
+  .box{
+    width:15px;height:15px;border-radius:5px;border:1.5px solid rgba(75,21,40,0.35);
+    background:#fff;flex:0 0 auto;
   }
   .chip.done .box{background:var(--pink-deep);border-color:var(--pink-deep);}
   .chip.done span.txt{text-decoration:line-through;opacity:0.5;}
-  .chip .txt{flex:1;}
+  .chip .txt{flex:1;padding-top:1px;}
   .chip .del{
-    flex:0 0 auto;font-size:13px;color:rgba(75,21,40,0.4);padding:0 2px;cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
+    flex:0 0 auto;font-size:14px;color:rgba(75,21,40,0.4);padding:4px 4px 4px 8px;cursor:pointer;
+    margin:-8px -4px -8px 0;
   }
   .ghost{
-    position:fixed;z-index:999;pointer-events:none;border-radius:9px;padding:7px 8px;
-    font-size:11.5px;line-height:1.35;box-shadow:0 8px 20px rgba(75,21,40,0.25);
-    width:calc(100vw - 56px);max-width:320px;
+    position:fixed;z-index:999;pointer-events:none;border-radius:9px;padding:9px 8px;
+    font-size:11.5px;line-height:1.35;box-shadow:0 10px 24px rgba(75,21,40,0.3);
+    width:calc(100vw - 56px);max-width:320px;transform:scale(1.03);
+  }
+  .drop-indicator{
+    height:3px;border-radius:2px;background:var(--pink-deep);margin:-2px 0;
   }
   .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
   .leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink-soft);}
@@ -139,6 +149,9 @@
     {key:"mon",label:"Monday"},{key:"tue",label:"Tuesday"},{key:"wed",label:"Wednesday"},
     {key:"thu",label:"Thursday"},{key:"fri",label:"Friday"},{key:"sat",label:"Saturday"},{key:"sun",label:"Sunday"}
   ];
+
+  const LONG_PRESS_MS = 380;
+  const MOVE_CANCEL_PX = 9;
 
   function baseWeekday(){
     return {
@@ -254,6 +267,7 @@
         const parsed = JSON.parse(res.value);
         state.weeks = parsed.weeks;
         state.done = parsed.done || {};
+        state.currentWeek = parsed.currentWeek || 1;
       } else {
         state.weeks = buildDefaultWeeks();
         await save();
@@ -267,7 +281,7 @@
 
   async function save(){
     try{
-      localStorage.setItem('chore-tracker-v1', JSON.stringify({weeks:state.weeks, done:state.done}));
+      localStorage.setItem('chore-tracker-v1', JSON.stringify({weeks:state.weeks, done:state.done, currentWeek:state.currentWeek}));
     }catch(e){ console.error('save failed', e); }
   }
 
@@ -284,8 +298,8 @@
     const wk = state.currentWeek;
     let html = '';
     html += `<h1>Chore tracker</h1>`;
-    html += `<p class="sub">4-week cycle · repeats every month. Drag a chip to move it, or add your own below any day.</p>`;
-    html += `<div class="note">Bathroom deep clean sits in Weeks 2 & 4 based on your cycle timing — drag it a week if needed. Bedsheet change alternates in Weeks 1 & 3 so there's only one big weekend task at a time.</div>`;
+    html += `<p class="sub">4-week cycle · repeats every month. Hold a chip for a moment, then drag to move it.</p>`;
+    html += `<div class="note">Bathroom deep clean sits in Weeks 2 & 4 based on your cycle timing. Bedsheet change alternates in Weeks 1 & 3 so there's only one big weekend task at a time.</div>`;
     html += `<div class="weektabs">`;
     for (let i=1;i<=4;i++){
       html += `<div class="weektab ${i===wk?'active':''}" data-week="${i}">Week ${i}</div>`;
@@ -301,7 +315,7 @@
         const cat = CATS[t.cat];
         const isDone = !!state.done[t.id];
         html += `<div class="chip ${isDone?'done':''}" data-id="${t.id}" style="background:${cat.color}">`;
-        html += `<div class="box" data-id="${t.id}"></div>`;
+        html += `<span class="boxwrap" data-id="${t.id}"><span class="box"></span></span>`;
         html += `<span class="txt">${t.label}</span>`;
         html += `<span class="del" data-del="${t.id}" data-day="${d.key}">✕</span>`;
         html += `</div>`;
@@ -331,16 +345,17 @@
       html += `<div class="leg-item"><div class="leg-dot" style="background:${CATS[key].color}"></div>${CATS[key].label}</div>`;
     }
     html += `</div>`;
-    html += `<div class="hint">Press &amp; drag a chip to move it · tap the box to check it off · tap ✕ to delete</div>`;
+    html += `<div class="hint">Hold &amp; drag to move · tap the box to check off · tap ✕ to delete</div>`;
     app.innerHTML = html;
     attachHandlers();
   }
 
   function attachHandlers(){
     document.querySelectorAll('.weektab').forEach(el=>{
-      el.addEventListener('click', ()=>{
+      el.addEventListener('click', async ()=>{
         state.currentWeek = parseInt(el.dataset.week,10);
         state.openAddDay = null;
+        await save();
         render();
       });
     });
@@ -352,7 +367,7 @@
       await save();
       render();
     });
-    document.querySelectorAll('.chip .box').forEach(el=>{
+    document.querySelectorAll('.boxwrap').forEach(el=>{
       el.addEventListener('click', async (e)=>{
         e.stopPropagation();
         const id = el.dataset.id;
@@ -417,8 +432,44 @@
   }
 
   function onChipPointerDown(e){
-    if (e.target.classList.contains('box') || e.target.classList.contains('del')) return;
+    if (e.target.closest('.boxwrap') || e.target.closest('.del')) return;
     const chipEl = e.currentTarget;
+    const startX = e.clientX, startY = e.clientY;
+    const pointerId = e.pointerId;
+    let timer = null;
+    let cancelled = false;
+
+    function cleanupPre(){
+      cancelled = true;
+      clearTimeout(timer);
+      document.removeEventListener('pointermove', preMove);
+      document.removeEventListener('pointerup', preEnd);
+      document.removeEventListener('pointercancel', preEnd);
+    }
+    function preMove(ev){
+      if (Math.abs(ev.clientX-startX) > MOVE_CANCEL_PX || Math.abs(ev.clientY-startY) > MOVE_CANCEL_PX){
+        cleanupPre();
+      }
+    }
+    function preEnd(){
+      cleanupPre();
+    }
+
+    document.addEventListener('pointermove', preMove);
+    document.addEventListener('pointerup', preEnd);
+    document.addEventListener('pointercancel', preEnd);
+
+    timer = setTimeout(()=>{
+      if (cancelled) return;
+      cleanupPre();
+      beginDrag(chipEl, startX, startY, pointerId);
+    }, LONG_PRESS_MS);
+  }
+
+  function beginDrag(chipEl, startX, startY, pointerId){
+    try{ chipEl.setPointerCapture(pointerId); }catch(e){}
+    try{ if (navigator.vibrate) navigator.vibrate(12); }catch(e){}
+
     const id = chipEl.dataset.id;
     const rect = chipEl.getBoundingClientRect();
     const bg = chipEl.style.background;
@@ -434,58 +485,85 @@
 
     chipEl.classList.add('dragging');
 
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
+    const offsetX = startX - rect.left;
+    const offsetY = startY - rect.top;
+    const sourceDay = chipEl.closest('.day-col').dataset.day;
 
-    dragCtx = { id, chipEl, ghost, offsetX, offsetY, sourceDay: chipEl.closest('.day-col').dataset.day };
+    let currentDropDay = sourceDay;
+    let currentDropIndex = null;
+    let indicator = document.createElement('div');
+    indicator.className = 'drop-indicator';
+
+    function computeDrop(clientX, clientY){
+      document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('dragover'));
+      const under = document.elementsFromPoint(clientX, clientY);
+      const col = under.find(x=>x.classList && x.classList.contains('day-col'));
+      if (!col){ indicator.remove(); currentDropDay=null; currentDropIndex=null; return; }
+      col.classList.add('dragover');
+      currentDropDay = col.dataset.day;
+
+      const chips = Array.from(col.querySelectorAll('.chip')).filter(c=>c.dataset.id!==id);
+      let insertBeforeEl = null;
+      for (const c of chips){
+        const r = c.getBoundingClientRect();
+        if (clientY < r.top + r.height/2){ insertBeforeEl = c; break; }
+      }
+      if (insertBeforeEl){
+        insertBeforeEl.parentNode.insertBefore(indicator, insertBeforeEl);
+        currentDropIndex = chips.indexOf(insertBeforeEl);
+      } else {
+        col.appendChild(indicator);
+        currentDropIndex = chips.length;
+      }
+    }
 
     function autoScroll(clientY){
       const threshold = 70;
-      if (clientY < threshold){
-        window.scrollBy(0, -12);
-      } else if (clientY > window.innerHeight - threshold){
-        window.scrollBy(0, 12);
-      }
+      if (clientY < threshold) window.scrollBy(0, -12);
+      else if (clientY > window.innerHeight - threshold) window.scrollBy(0, 12);
     }
 
     function onMove(ev){
       ghost.style.left = (ev.clientX - offsetX)+'px';
       ghost.style.top = (ev.clientY - offsetY)+'px';
-      document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('dragover'));
-      const under = document.elementsFromPoint(ev.clientX, ev.clientY);
-      const col = under.find(x=>x.classList && x.classList.contains('day-col'));
-      if (col) col.classList.add('dragover');
+      computeDrop(ev.clientX, ev.clientY);
       autoScroll(ev.clientY);
+      ev.preventDefault();
     }
 
     function onUp(ev){
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
-      const under = document.elementsFromPoint(ev.clientX, ev.clientY);
-      const col = under.find(x=>x.classList && x.classList.contains('day-col'));
+      document.removeEventListener('pointercancel', onUp);
       document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('dragover'));
+      indicator.remove();
       ghost.remove();
       chipEl.classList.remove('dragging');
+      try{ chipEl.releasePointerCapture(pointerId); }catch(e){}
 
-      if (col){
-        const targetDay = col.dataset.day;
-        moveTask(id, dragCtx.sourceDay, targetDay);
+      if (currentDropDay){
+        moveTask(id, sourceDay, currentDropDay, currentDropIndex);
       }
-      dragCtx = null;
     }
 
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
   }
 
-  async function moveTask(id, sourceDay, targetDay){
+  async function moveTask(id, sourceDay, targetDay, index){
     const wk = state.currentWeek;
     const src = state.weeks[wk][sourceDay] || [];
     const idx = src.findIndex(t=>t.id===id);
     if (idx === -1) return;
     const [task] = src.splice(idx,1);
     if (!state.weeks[wk][targetDay]) state.weeks[wk][targetDay] = [];
-    state.weeks[wk][targetDay].push(task);
+    const dest = state.weeks[wk][targetDay];
+    let insertAt = (index===null || index===undefined) ? dest.length : index;
+    if (sourceDay === targetDay && idx < insertAt) insertAt -= 1;
+    if (insertAt < 0) insertAt = 0;
+    if (insertAt > dest.length) insertAt = dest.length;
+    dest.splice(insertAt, 0, task);
     await save();
     render();
   }
