@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chore Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#E8799F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chores">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<style>
+  :root{
+    --bg:#FFF6F9;
+    --card:#ffffff;
+    --ink:#4B1528;
+    --ink-soft:#8A4A63;
+    --line:#F5DCE6;
+    --pink:#F2A9C4;
+    --pink-deep:#E8799F;
+  }
+  *{box-sizing:border-box;}
+  body,.wrap{margin:0;padding:0;}
+  .wrap{
+    background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    padding:14px 12px 40px;
+    min-height:100%;
+  }
+  h1{font-size:19px;margin:0 0 2px;font-weight:700;color:var(--ink);}
+  .sub{font-size:12px;color:var(--ink-soft);margin:0 0 14px;line-height:1.5;}
+  .note{
+    background:#FDF0F5;border:1px dashed var(--pink);border-radius:12px;
+    padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-bottom:14px;line-height:1.5;
+  }
+  .weektabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
+  .weektab{
+    flex:0 0 auto;padding:7px 14px;border-radius:999px;border:1.5px solid var(--pink);
+    background:#fff;color:var(--pink-deep);font-size:12.5px;font-weight:600;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  .weektab.active{background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
+  .weeklabel{font-size:13px;font-weight:700;color:var(--ink);}
+  .resetbtn{
+    font-size:11px;color:var(--ink-soft);background:#fff;border:1px solid var(--line);
+    border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap;
+  }
+  .board{
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .day-col{
+    background:var(--card);
+    border-radius:14px;border:1px solid var(--line);padding:10px;
+    min-height:56px;display:flex;flex-direction:column;gap:6px;
+    transition:box-shadow .15s, background .15s;
+  }
+  .day-col.dragover{
+    box-shadow:0 0 0 2px var(--pink-deep) inset;background:#FFF0F6;
+  }
+  .day-head{
+    font-size:13px;font-weight:700;color:var(--ink);
+    display:flex;justify-content:space-between;align-items:center;
+    padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:2px;
+  }
+  .addlink{font-size:11px;font-weight:600;color:var(--pink-deep);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .chip{
+    border-radius:9px;padding:7px 8px;font-size:11.5px;line-height:1.35;
+    cursor:grab;touch-action:none;position:relative;border:1px solid rgba(0,0,0,0.04);
+    display:flex;gap:6px;align-items:flex-start;
+  }
+  .chip.dragging{opacity:0.25;}
+  .chip .box{
+    flex:0 0 14px;width:14px;height:14px;border-radius:4px;border:1.5px solid rgba(75,21,40,0.35);
+    margin-top:1px;background:#fff;
+  }
+  .chip.done .box{background:var(--pink-deep);border-color:var(--pink-deep);}
+  .chip.done span.txt{text-decoration:line-through;opacity:0.5;}
+  .chip .txt{flex:1;}
+  .chip .del{
+    flex:0 0 auto;font-size:13px;color:rgba(75,21,40,0.4);padding:0 2px;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ghost{
+    position:fixed;z-index:999;pointer-events:none;border-radius:9px;padding:7px 8px;
+    font-size:11.5px;line-height:1.35;box-shadow:0 8px 20px rgba(75,21,40,0.25);
+    width:calc(100vw - 56px);max-width:320px;
+  }
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink-soft);}
+  .leg-dot{width:9px;height:9px;border-radius:3px;flex:0 0 9px;}
+  .hint{font-size:10.5px;color:var(--ink-soft);text-align:center;margin-top:10px;font-style:italic;}
+
+  .addform{
+    background:#FDF0F5;border-radius:10px;padding:8px;margin-top:2px;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .addform input[type=text]{
+    padding:7px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;width:100%;
+    background:#fff;color:var(--ink);
+  }
+  .addform select{
+    padding:7px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;width:100%;
+    background:#fff;color:var(--ink);
+  }
+  .addform .row{display:flex;gap:6px;}
+  .addform .row > *{flex:1;min-width:0;}
+  .addform .btns{display:flex;gap:6px;justify-content:flex-end;}
+  .addform .save{
+    background:var(--pink-deep);color:#fff;border:none;border-radius:8px;
+    padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;
+  }
+  .addform .cancel{
+    background:#fff;color:var(--ink-soft);border:1px solid var(--line);border-radius:8px;
+    padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+  const CATS = {
+    self:    {label:"Bed & self",  color:"#FDF3C7"},
+    vacuum:  {label:"Daily reset", color:"#FBD5E3"},
+    cooking: {label:"Cooking",     color:"#FCE3C1"},
+    shopping:{label:"Shopping",    color:"#DCF2DC"},
+    laundry: {label:"Laundry",     color:"#D6E9FA"},
+    clean:   {label:"Deep clean",  color:"#E7D6F7"},
+    monthly: {label:"Monthly ritual", color:"#FDE68A"},
+    note:    {label:"Heads up",    color:"#F0F0F0"}
+  };
+
+  const DAYS = [
+    {key:"mon",label:"Monday"},{key:"tue",label:"Tuesday"},{key:"wed",label:"Wednesday"},
+    {key:"thu",label:"Thursday"},{key:"fri",label:"Friday"},{key:"sat",label:"Saturday"},{key:"sun",label:"Sunday"}
+  ];
+
+  function baseWeekday(){
+    return {
+      mon:[
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"cooking",label:"Cook dinner"},
+        {id:cid(),cat:"laundry",label:"Wash PJs load — 7pm, before cooking"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum — evening switch-off"}
+      ],
+      tue:[
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"shopping",label:"Gym → veg shopping"},
+        {id:cid(),cat:"laundry",label:"Hang PJs to dry — balcony, morning"},
+        {id:cid(),cat:"laundry",label:"Fold & put away PJs — evening"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum"}
+      ],
+      wed:[
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"cooking",label:"Cook dinner"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum"}
+      ],
+      thu:[
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"shopping",label:"Gym → veg shopping"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum"}
+      ]
+    };
+  }
+
+  let counter = 0;
+  function cid(){ counter++; return "c"+Date.now().toString(36)+counter; }
+
+  function buildDefaultWeeks(){
+    const w = {1:{},2:{},3:{},4:{}};
+
+    for (const wk of [1,2,3,4]){
+      const base = baseWeekday();
+      w[wk].mon = base.mon; w[wk].tue = base.tue; w[wk].wed = base.wed; w[wk].thu = base.thu;
+    }
+
+    w[1].fri = [
+      {id:cid(),cat:"self",label:"Make the bed"},
+      {id:cid(),cat:"monthly",label:"Cook Bengali food — double batch (monthly)"},
+      {id:cid(),cat:"laundry",label:"Wash active wear load — evening"},
+      {id:cid(),cat:"vacuum",label:"Light vacuum"}
+    ];
+    for (const wk of [2,3,4]){
+      w[wk].fri = [
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"cooking",label:"Cook dinner"},
+        {id:cid(),cat:"laundry",label:"Wash active wear load — evening"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum"}
+      ];
+    }
+
+    for (const wk of [1,3]){
+      w[wk].sat = [
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"clean",label:"Change bedsheets + beat dust (jhata) — morning"},
+        {id:cid(),cat:"laundry",label:"Hang active wear to dry — morning"},
+        {id:cid(),cat:"laundry",label:"Wash old bedding load — evening"},
+        {id:cid(),cat:"laundry",label:"Fold & put away active wear — evening"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum"},
+        {id:cid(),cat:"note",label:"Plans out / eating out tonight?"}
+      ];
+    }
+    for (const wk of [2,4]){
+      w[wk].sat = [
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"clean",label:"Bathroom deep clean + bin out + shower after — 6pm"},
+        {id:cid(),cat:"laundry",label:"Hang active wear to dry — morning"},
+        {id:cid(),cat:"laundry",label:"Fold & put away active wear — evening"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum"},
+        {id:cid(),cat:"note",label:"Plans out / eating out tonight?"}
+      ];
+    }
+
+    w[1].sun = [
+      {id:cid(),cat:"self",label:"Make the bed"},
+      {id:cid(),cat:"laundry",label:"Hang bedding to dry — morning"},
+      {id:cid(),cat:"laundry",label:"Fold bedding & put away — evening"},
+      {id:cid(),cat:"monthly",label:"Big shop — supplies & meat (late arvo/eve)"},
+      {id:cid(),cat:"monthly",label:"Deep clean coffee machine"},
+      {id:cid(),cat:"monthly",label:"House reset — re-evaluate what's working"},
+      {id:cid(),cat:"vacuum",label:"Light vacuum"},
+      {id:cid(),cat:"note",label:"Bengali leftovers today"}
+    ];
+    w[3].sun = [
+      {id:cid(),cat:"self",label:"Make the bed"},
+      {id:cid(),cat:"laundry",label:"Hang bedding to dry — morning"},
+      {id:cid(),cat:"laundry",label:"Fold bedding & put away — evening"},
+      {id:cid(),cat:"vacuum",label:"Light vacuum"},
+      {id:cid(),cat:"note",label:"Plans out / eating out today?"}
+    ];
+    for (const wk of [2,4]){
+      w[wk].sun = [
+        {id:cid(),cat:"self",label:"Make the bed"},
+        {id:cid(),cat:"vacuum",label:"Light vacuum"},
+        {id:cid(),cat:"note",label:"Plans out / eating out today?"}
+      ];
+    }
+
+    return w;
+  }
+
+  let state = { currentWeek:1, weeks:null, done:{}, openAddDay:null };
+  let dragCtx = null;
+
+  async function load(){
+    try{
+      const res = (function(){const v=localStorage.getItem('chore-tracker-v1'); return v?{value:v}:null;})();
+      if (res && res.value){
+        const parsed = JSON.parse(res.value);
+        state.weeks = parsed.weeks;
+        state.done = parsed.done || {};
+      } else {
+        state.weeks = buildDefaultWeeks();
+        await save();
+      }
+    }catch(e){
+      state.weeks = buildDefaultWeeks();
+      try{ await save(); }catch(e2){}
+    }
+    render();
+  }
+
+  async function save(){
+    try{
+      localStorage.setItem('chore-tracker-v1', JSON.stringify({weeks:state.weeks, done:state.done}));
+    }catch(e){ console.error('save failed', e); }
+  }
+
+  function catOptions(selected){
+    let html = '';
+    for (const key in CATS){
+      html += `<option value="${key}" ${key===selected?'selected':''}>${CATS[key].label}</option>`;
+    }
+    return html;
+  }
+
+  function render(){
+    const app = document.getElementById('app');
+    const wk = state.currentWeek;
+    let html = '';
+    html += `<h1>Chore tracker</h1>`;
+    html += `<p class="sub">4-week cycle · repeats every month. Drag a chip to move it, or add your own below any day.</p>`;
+    html += `<div class="note">Bathroom deep clean sits in Weeks 2 & 4 based on your cycle timing — drag it a week if needed. Bedsheet change alternates in Weeks 1 & 3 so there's only one big weekend task at a time.</div>`;
+    html += `<div class="weektabs">`;
+    for (let i=1;i<=4;i++){
+      html += `<div class="weektab ${i===wk?'active':''}" data-week="${i}">Week ${i}</div>`;
+    }
+    html += `</div>`;
+    html += `<div class="toolbar"><div class="weeklabel">Week ${wk}</div><div class="resetbtn" id="resetweek">Reset checks this week</div></div>`;
+    html += `<div class="board" id="board">`;
+    for (const d of DAYS){
+      const tasks = state.weeks[wk][d.key] || [];
+      html += `<div class="day-col" data-day="${d.key}">`;
+      html += `<div class="day-head"><span>${d.label}</span><span class="addlink" data-addday="${d.key}">+ add task</span></div>`;
+      for (const t of tasks){
+        const cat = CATS[t.cat];
+        const isDone = !!state.done[t.id];
+        html += `<div class="chip ${isDone?'done':''}" data-id="${t.id}" style="background:${cat.color}">`;
+        html += `<div class="box" data-id="${t.id}"></div>`;
+        html += `<span class="txt">${t.label}</span>`;
+        html += `<span class="del" data-del="${t.id}" data-day="${d.key}">✕</span>`;
+        html += `</div>`;
+      }
+      if (state.openAddDay === d.key){
+        html += `<div class="addform">
+          <input type="text" id="newTaskLabel" placeholder="Task name" />
+          <div class="row">
+            <select id="newTaskCat">${catOptions('self')}</select>
+            <select id="newTaskRepeat">
+              <option value="once">Just this week</option>
+              <option value="weekly">Every week (all 4)</option>
+              <option value="fortnightly">Every 2 weeks (alternating)</option>
+            </select>
+          </div>
+          <div class="btns">
+            <span class="cancel" id="cancelAdd">Cancel</span>
+            <span class="save" id="saveAdd" data-day="${d.key}">Add</span>
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+    html += `<div class="legend">`;
+    for (const key in CATS){
+      html += `<div class="leg-item"><div class="leg-dot" style="background:${CATS[key].color}"></div>${CATS[key].label}</div>`;
+    }
+    html += `</div>`;
+    html += `<div class="hint">Press &amp; drag a chip to move it · tap the box to check it off · tap ✕ to delete</div>`;
+    app.innerHTML = html;
+    attachHandlers();
+  }
+
+  function attachHandlers(){
+    document.querySelectorAll('.weektab').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        state.currentWeek = parseInt(el.dataset.week,10);
+        state.openAddDay = null;
+        render();
+      });
+    });
+    document.getElementById('resetweek').addEventListener('click', async ()=>{
+      const wk = state.currentWeek;
+      for (const d of DAYS){
+        (state.weeks[wk][d.key]||[]).forEach(t=>{ delete state.done[t.id]; });
+      }
+      await save();
+      render();
+    });
+    document.querySelectorAll('.chip .box').forEach(el=>{
+      el.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        const id = el.dataset.id;
+        state.done[id] = !state.done[id];
+        await save();
+        render();
+      });
+    });
+    document.querySelectorAll('.chip .del').forEach(el=>{
+      el.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        const id = el.dataset.del;
+        const day = el.dataset.day;
+        const wk = state.currentWeek;
+        const arr = state.weeks[wk][day] || [];
+        const idx = arr.findIndex(t=>t.id===id);
+        if (idx>-1) arr.splice(idx,1);
+        delete state.done[id];
+        await save();
+        render();
+      });
+    });
+    document.querySelectorAll('.addlink').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const day = el.dataset.addday;
+        state.openAddDay = (state.openAddDay === day) ? null : day;
+        render();
+      });
+    });
+    const cancelEl = document.getElementById('cancelAdd');
+    if (cancelEl) cancelEl.addEventListener('click', ()=>{ state.openAddDay = null; render(); });
+    const saveEl = document.getElementById('saveAdd');
+    if (saveEl) saveEl.addEventListener('click', async ()=>{
+      const day = saveEl.dataset.day;
+      const label = document.getElementById('newTaskLabel').value.trim();
+      const cat = document.getElementById('newTaskCat').value;
+      const repeat = document.getElementById('newTaskRepeat').value;
+      if (!label) return;
+      const wk = state.currentWeek;
+      if (repeat === 'once'){
+        if (!state.weeks[wk][day]) state.weeks[wk][day] = [];
+        state.weeks[wk][day].push({id:cid(), cat, label});
+      } else if (repeat === 'weekly'){
+        for (const w of [1,2,3,4]){
+          if (!state.weeks[w][day]) state.weeks[w][day] = [];
+          state.weeks[w][day].push({id:cid(), cat, label});
+        }
+      } else if (repeat === 'fortnightly'){
+        const pair = wk % 2 === 1 ? [1,3] : [2,4];
+        for (const w of pair){
+          if (!state.weeks[w][day]) state.weeks[w][day] = [];
+          state.weeks[w][day].push({id:cid(), cat, label});
+        }
+      }
+      state.openAddDay = null;
+      await save();
+      render();
+    });
+    document.querySelectorAll('.chip').forEach(el=>{
+      el.addEventListener('pointerdown', onChipPointerDown);
+    });
+  }
+
+  function onChipPointerDown(e){
+    if (e.target.classList.contains('box') || e.target.classList.contains('del')) return;
+    const chipEl = e.currentTarget;
+    const id = chipEl.dataset.id;
+    const rect = chipEl.getBoundingClientRect();
+    const bg = chipEl.style.background;
+    const txt = chipEl.querySelector('.txt').textContent;
+
+    const ghost = document.createElement('div');
+    ghost.className = 'ghost';
+    ghost.style.background = bg;
+    ghost.style.left = rect.left+'px';
+    ghost.style.top = rect.top+'px';
+    ghost.textContent = txt;
+    document.body.appendChild(ghost);
+
+    chipEl.classList.add('dragging');
+
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    dragCtx = { id, chipEl, ghost, offsetX, offsetY, sourceDay: chipEl.closest('.day-col').dataset.day };
+
+    function autoScroll(clientY){
+      const threshold = 70;
+      if (clientY < threshold){
+        window.scrollBy(0, -12);
+      } else if (clientY > window.innerHeight - threshold){
+        window.scrollBy(0, 12);
+      }
+    }
+
+    function onMove(ev){
+      ghost.style.left = (ev.clientX - offsetX)+'px';
+      ghost.style.top = (ev.clientY - offsetY)+'px';
+      document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('dragover'));
+      const under = document.elementsFromPoint(ev.clientX, ev.clientY);
+      const col = under.find(x=>x.classList && x.classList.contains('day-col'));
+      if (col) col.classList.add('dragover');
+      autoScroll(ev.clientY);
+    }
+
+    function onUp(ev){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      const under = document.elementsFromPoint(ev.clientX, ev.clientY);
+      const col = under.find(x=>x.classList && x.classList.contains('day-col'));
+      document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('dragover'));
+      ghost.remove();
+      chipEl.classList.remove('dragging');
+
+      if (col){
+        const targetDay = col.dataset.day;
+        moveTask(id, dragCtx.sourceDay, targetDay);
+      }
+      dragCtx = null;
+    }
+
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }
+
+  async function moveTask(id, sourceDay, targetDay){
+    const wk = state.currentWeek;
+    const src = state.weeks[wk][sourceDay] || [];
+    const idx = src.findIndex(t=>t.id===id);
+    if (idx === -1) return;
+    const [task] = src.splice(idx,1);
+    if (!state.weeks[wk][targetDay]) state.weeks[wk][targetDay] = [];
+    state.weeks[wk][targetDay].push(task);
+    await save();
+    render();
+  }
+
+  load();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(function(){});
+}
+</script>
+</body>
+</html>
