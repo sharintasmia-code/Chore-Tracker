@@ -3,65 +3,49 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Chore Tracker</title>
+<title>Planner</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#E8799F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Chores">
+<meta name="apple-mobile-web-app-title" content="Planner">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
 <style>
   :root{
-    --bg:#FFF6F9;
-    --card:#ffffff;
-    --ink:#4B1528;
-    --ink-soft:#8A4A63;
-    --line:#F5DCE6;
-    --pink:#F2A9C4;
-    --pink-deep:#E8799F;
+    --bg:#FFF6F9; --card:#ffffff; --ink:#4B1528; --ink-soft:#8A4A63;
+    --line:#F5DCE6; --pink:#F2A9C4; --pink-deep:#E8799F;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body,.wrap{margin:0;padding:0;}
   .wrap{
     background:var(--bg);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    color:var(--ink);
-    padding:14px 12px 40px;
-    min-height:100%;
+    color:var(--ink); padding:14px 12px 40px; min-height:100%;
   }
-  h1{font-size:19px;margin:0 0 2px;font-weight:700;color:var(--ink);}
-  .sub{font-size:12px;color:var(--ink-soft);margin:0 0 14px;line-height:1.5;}
-  .note{
-    background:#FDF0F5;border:1px dashed var(--pink);border-radius:12px;
-    padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-bottom:14px;line-height:1.5;
+  .appname{
+    font-size:28px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--pink-deep);text-align:center;margin:4px 0 12px;
   }
-  .weektabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
-  .weektab{
-    flex:0 0 auto;padding:7px 14px;border-radius:999px;border:1.5px solid var(--pink);
-    background:#fff;color:var(--pink-deep);font-size:12.5px;font-weight:600;cursor:pointer;
-    user-select:none;
+  .mantra{
+    background:linear-gradient(135deg,#FDE9F1,#FFF3F7);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;margin-bottom:16px;text-align:center;
+    font-size:14px;font-style:italic;line-height:1.5;color:var(--ink);cursor:pointer;
   }
-  .weektab.active{background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);}
-  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
-  .weeklabel{font-size:13px;font-weight:700;color:var(--ink);}
+  .mantra small{display:block;font-size:9.5px;font-style:normal;color:var(--ink-soft);margin-top:6px;letter-spacing:0.4px;}
+  .toolbar{display:flex;justify-content:flex-end;align-items:center;margin-bottom:10px;}
   .resetbtn{
     font-size:11px;color:var(--ink-soft);background:#fff;border:1px solid var(--line);
-    border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap;
+    border-radius:8px;padding:6px 12px;cursor:pointer;white-space:nowrap;
   }
-  .board{
-    display:flex;flex-direction:column;gap:10px;
-  }
+  .board{display:flex;flex-direction:column;gap:10px;}
   .day-col{
-    background:var(--card);
-    border-radius:14px;border:1px solid var(--line);padding:10px;
+    background:var(--card);border-radius:14px;border:1px solid var(--line);padding:10px;
     min-height:56px;display:flex;flex-direction:column;gap:6px;
     transition:box-shadow .15s, background .15s;
   }
-  .day-col.dragover{
-    box-shadow:0 0 0 2px var(--pink-deep) inset;background:#FFF0F6;
-  }
+  .day-col.dragover{box-shadow:0 0 0 2px var(--pink-deep) inset;background:#FFF0F6;}
   .day-head{
     font-size:13px;font-weight:700;color:var(--ink);
     display:flex;justify-content:space-between;align-items:center;
@@ -72,19 +56,14 @@
     border-radius:9px;padding:9px 8px;font-size:11.5px;line-height:1.35;
     position:relative;border:1px solid rgba(0,0,0,0.04);
     display:flex;gap:6px;align-items:flex-start;
-    touch-action:pan-y;
-    transition:transform .12s;
+    touch-action:pan-y;transition:transform .12s;user-select:none;-webkit-user-select:none;
   }
   .chip.dragging{opacity:0.3;}
-  .chip.liftready{transform:scale(1.03);box-shadow:0 4px 14px rgba(75,21,40,0.18);}
   .boxwrap{
     flex:0 0 30px;width:30px;height:26px;display:flex;align-items:flex-start;justify-content:center;
     margin:-8px 0 -8px -6px;padding:8px 4px 8px 6px;
   }
-  .box{
-    width:15px;height:15px;border-radius:5px;border:1.5px solid rgba(75,21,40,0.35);
-    background:#fff;flex:0 0 auto;
-  }
+  .box{width:15px;height:15px;border-radius:5px;border:1.5px solid rgba(75,21,40,0.35);background:#fff;flex:0 0 auto;}
   .chip.done .box{background:var(--pink-deep);border-color:var(--pink-deep);}
   .chip.done span.txt{text-decoration:line-through;opacity:0.5;}
   .chip .txt{flex:1;padding-top:1px;}
@@ -97,36 +76,30 @@
     font-size:11.5px;line-height:1.35;box-shadow:0 10px 24px rgba(75,21,40,0.3);
     width:calc(100vw - 56px);max-width:320px;transform:scale(1.03);
   }
-  .drop-indicator{
-    height:3px;border-radius:2px;background:var(--pink-deep);margin:-2px 0;
-  }
+  .drop-indicator{height:3px;border-radius:2px;background:var(--pink-deep);margin:-2px 0;}
   .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
   .leg-item{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink-soft);}
   .leg-dot{width:9px;height:9px;border-radius:3px;flex:0 0 9px;}
   .hint{font-size:10.5px;color:var(--ink-soft);text-align:center;margin-top:10px;font-style:italic;}
-
   .addform{
     background:#FDF0F5;border-radius:10px;padding:8px;margin-top:2px;
     display:flex;flex-direction:column;gap:6px;
   }
-  .addform input[type=text]{
-    padding:7px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;width:100%;
-    background:#fff;color:var(--ink);
-  }
-  .addform select{
-    padding:7px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;width:100%;
+  .addform input[type=text], .addform select{
+    padding:8px;border-radius:8px;border:1px solid var(--line);font-size:13px;width:100%;
     background:#fff;color:var(--ink);
   }
   .addform .row{display:flex;gap:6px;}
   .addform .row > *{flex:1;min-width:0;}
+  .addform .chk{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft);}
   .addform .btns{display:flex;gap:6px;justify-content:flex-end;}
   .addform .save{
-    background:var(--pink-deep);color:#fff;border:none;border-radius:8px;
-    padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;
+    background:var(--pink-deep);color:#fff;border-radius:8px;
+    padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;
   }
   .addform .cancel{
     background:#fff;color:var(--ink-soft);border:1px solid var(--line);border-radius:8px;
-    padding:6px 12px;font-size:12px;cursor:pointer;
+    padding:7px 14px;font-size:12px;cursor:pointer;
   }
 </style>
 
@@ -134,15 +107,42 @@
 
 <script>
 (function(){
+  // ---- EDIT ME: app name and mantras live here ----
+  const APP_NAME = "Planner";
+  const MANTRAS = [
+    "Do the little things right away.",
+    "Small steps still count.",
+    "Done is better than perfect.",
+    "Two minutes now saves twenty later.",
+    "Progress, not pressure.",
+    "Low energy day? Do the one easy thing.",
+    "Rest is part of the routine.",
+    "Future me will thank me.",
+    "A tidy space is a calmer mind."
+  ];
+  // -------------------------------------------------
+
+  const STORE_KEY = 'planner-v2';
+
+  // Works inside Claude (window.storage) and on a normal website (localStorage).
+  const store = (window.storage && window.storage.get) ? {
+    get: async (k)=> window.storage.get(k),
+    set: async (k,v)=> window.storage.set(k,v)
+  } : {
+    get: async (k)=>{ try{ const v=localStorage.getItem(k); return v?{value:v}:null; }catch(e){ return null; } },
+    set: async (k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} }
+  };
+
   const CATS = {
-    self:    {label:"Bed & self",  color:"#FDF3C7"},
-    vacuum:  {label:"Daily reset", color:"#FBD5E3"},
-    cooking: {label:"Cooking",     color:"#FCE3C1"},
-    shopping:{label:"Shopping",    color:"#DCF2DC"},
-    laundry: {label:"Laundry",     color:"#D6E9FA"},
-    clean:   {label:"Deep clean",  color:"#E7D6F7"},
-    monthly: {label:"Monthly ritual", color:"#FDE68A"},
-    note:    {label:"Heads up",    color:"#F0F0F0"}
+    self:    {label:"Bed & self-care", color:"#FDF3C7"},
+    routine: {label:"Movement",        color:"#E3E8FC"},
+    cooking: {label:"Cooking",         color:"#FCE3C1"},
+    shopping:{label:"Shopping",        color:"#DCF2DC"},
+    laundry: {label:"Laundry",         color:"#D6E9FA"},
+    clean:   {label:"Deep clean",      color:"#E7D6F7"},
+    vacuum:  {label:"Vacuum",          color:"#FBD5E3"},
+    dust:    {label:"House reset",     color:"#F0E6FA"},
+    note:    {label:"Heads up",        color:"#EDEDED"}
   };
 
   const DAYS = [
@@ -152,136 +152,131 @@
 
   const LONG_PRESS_MS = 380;
   const MOVE_CANCEL_PX = 9;
+  const DOUBLE_TAP_MS = 400;
 
-  function baseWeekday(){
-    return {
-      mon:[
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"cooking",label:"Cook dinner"},
-        {id:cid(),cat:"laundry",label:"Wash PJs load — 7pm, before cooking"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum — evening switch-off"}
-      ],
-      tue:[
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"shopping",label:"Gym → veg shopping"},
-        {id:cid(),cat:"laundry",label:"Hang PJs to dry — balcony, morning"},
-        {id:cid(),cat:"laundry",label:"Fold & put away PJs — evening"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum"}
-      ],
-      wed:[
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"cooking",label:"Cook dinner"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum"}
-      ],
-      thu:[
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"shopping",label:"Gym → veg shopping"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum"}
-      ]
-    };
-  }
+  // ---- The schedule (one week) ----
+  const SCHEDULE = {
+    mon:[
+      ["self","Make the bed"],
+      ["routine","Morning walk - 30 min"],
+      ["shopping","Woolies shop - milk, eggs, yogurt"],
+      ["self","Shower"],
+      ["laundry","Wash intimates"],
+      ["routine","Evening walk - 30 min"],
+      ["cooking","Cook"],
+      ["self","Change pillowcase"]
+    ],
+    tue:[
+      ["self","Make the bed"],
+      ["routine","Gym"],
+      ["shopping","Adam's Apple shop - fresh vegetables"],
+      ["cooking","Make 4 eggs"],
+      ["self","Shower"],
+      ["laundry","Hang intimates - morning"],
+      ["laundry","Put away intimates - during break 2"],
+      ["laundry","Wash PJs"],
+      ["vacuum","Vacuum"],
+      ["cooking","Bake dessert"]
+    ],
+    wed:[
+      ["self","Make the bed"],
+      ["routine","Morning walk - 30 min"],
+      ["self","Shower"],
+      ["laundry","Hang PJs - morning"],
+      ["laundry","Put away PJs - during break 2"],
+      ["routine","Evening walk - 30 min"],
+      ["cooking","Cook"],
+      ["self","Change pillowcase"]
+    ],
+    thu:[
+      ["self","Make the bed"],
+      ["routine","Gym"],
+      ["shopping","Adam's Apple shop - fresh vegetables"],
+      ["cooking","Make 4 eggs"],
+      ["clean","Bathroom clean and shower"],
+      ["laundry","Wash active wear"],
+      ["vacuum","Vacuum"],
+      ["shopping","Big shop - protein & supplies"]
+    ],
+    fri:[
+      ["self","Make the bed"],
+      ["routine","Morning walk - 30 min"],
+      ["self","Shower"],
+      ["laundry","Hang active wear - morning"],
+      ["laundry","Put away active wear - during break 2"],
+      ["clean","Change bedsheets and put to wash"],
+      ["laundry","Change towels and kitchen towels and put to wash"],
+      ["cooking","Cook Bengali"],
+      ["self","Change pillowcase"]
+    ],
+    sat:[
+      ["self","Make the bed"],
+      ["routine","Gym"],
+      ["self","Shower"],
+      ["laundry","Hang sheets and towels"],
+      ["laundry","Fold and put away sheets and towels"],
+      ["note","Plan out!"]
+    ],
+    sun:[
+      ["self","Make the bed"],
+      ["routine","Morning walk - 30 min"],
+      ["cooking","Make 4 eggs"],
+      ["self","Everything shower - wash hair"],
+      ["dust","House reset - dusting and vacuum"]
+    ]
+  };
 
   let counter = 0;
   function cid(){ counter++; return "c"+Date.now().toString(36)+counter; }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function buildDefaultWeeks(){
-    const w = {1:{},2:{},3:{},4:{}};
-
-    for (const wk of [1,2,3,4]){
-      const base = baseWeekday();
-      w[wk].mon = base.mon; w[wk].tue = base.tue; w[wk].wed = base.wed; w[wk].thu = base.thu;
+  function buildDefaultDays(){
+    const d = {};
+    for (const key in SCHEDULE){
+      d[key] = SCHEDULE[key].map((it,i)=>({id:"d-"+key+"-"+i, cat:it[0], label:it[1]}));
     }
-
-    w[1].fri = [
-      {id:cid(),cat:"self",label:"Make the bed"},
-      {id:cid(),cat:"monthly",label:"Cook Bengali food — double batch (monthly)"},
-      {id:cid(),cat:"laundry",label:"Wash active wear load — evening"},
-      {id:cid(),cat:"vacuum",label:"Light vacuum"}
-    ];
-    for (const wk of [2,3,4]){
-      w[wk].fri = [
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"cooking",label:"Cook dinner"},
-        {id:cid(),cat:"laundry",label:"Wash active wear load — evening"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum"}
-      ];
-    }
-
-    for (const wk of [1,3]){
-      w[wk].sat = [
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"clean",label:"Change bedsheets + beat dust (jhata) — morning"},
-        {id:cid(),cat:"laundry",label:"Hang active wear to dry — morning"},
-        {id:cid(),cat:"laundry",label:"Wash old bedding load — evening"},
-        {id:cid(),cat:"laundry",label:"Fold & put away active wear — evening"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum"},
-        {id:cid(),cat:"note",label:"Plans out / eating out tonight?"}
-      ];
-    }
-    for (const wk of [2,4]){
-      w[wk].sat = [
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"clean",label:"Bathroom deep clean + bin out + shower after — 6pm"},
-        {id:cid(),cat:"laundry",label:"Hang active wear to dry — morning"},
-        {id:cid(),cat:"laundry",label:"Fold & put away active wear — evening"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum"},
-        {id:cid(),cat:"note",label:"Plans out / eating out tonight?"}
-      ];
-    }
-
-    w[1].sun = [
-      {id:cid(),cat:"self",label:"Make the bed"},
-      {id:cid(),cat:"laundry",label:"Hang bedding to dry — morning"},
-      {id:cid(),cat:"laundry",label:"Fold bedding & put away — evening"},
-      {id:cid(),cat:"monthly",label:"Big shop — supplies & meat (late arvo/eve)"},
-      {id:cid(),cat:"monthly",label:"Deep clean coffee machine"},
-      {id:cid(),cat:"monthly",label:"House reset — re-evaluate what's working"},
-      {id:cid(),cat:"vacuum",label:"Light vacuum"},
-      {id:cid(),cat:"note",label:"Bengali leftovers today"}
-    ];
-    w[3].sun = [
-      {id:cid(),cat:"self",label:"Make the bed"},
-      {id:cid(),cat:"laundry",label:"Hang bedding to dry — morning"},
-      {id:cid(),cat:"laundry",label:"Fold bedding & put away — evening"},
-      {id:cid(),cat:"vacuum",label:"Light vacuum"},
-      {id:cid(),cat:"note",label:"Plans out / eating out today?"}
-    ];
-    for (const wk of [2,4]){
-      w[wk].sun = [
-        {id:cid(),cat:"self",label:"Make the bed"},
-        {id:cid(),cat:"vacuum",label:"Light vacuum"},
-        {id:cid(),cat:"note",label:"Plans out / eating out today?"}
-      ];
-    }
-
-    return w;
+    return d;
   }
 
-  let state = { currentWeek:1, weeks:null, done:{}, openAddDay:null };
+  let state = {
+    days:null, done:{}, edits:{}, openAddDay:null, editId:null,
+    mantraIdx: Math.floor(Date.now()/86400000) % MANTRAS.length
+  };
   let dragCtx = null;
+  let lastTap = {id:null, t:0};
+
+  function applyEdits(days){
+    for (const key in days){
+      days[key].forEach(t=>{
+        const e = state.edits[t.id];
+        if (e){ t.label = e.label; t.cat = e.cat; }
+      });
+    }
+  }
 
   async function load(){
     try{
-      const res = (function(){const v=localStorage.getItem('chore-tracker-v1'); return v?{value:v}:null;})();
+      const res = await store.get(STORE_KEY);
       if (res && res.value){
-        const parsed = JSON.parse(res.value);
-        state.weeks = parsed.weeks;
-        state.done = parsed.done || {};
-        state.currentWeek = parsed.currentWeek || 1;
-      } else {
-        state.weeks = buildDefaultWeeks();
-        await save();
+        const p = JSON.parse(res.value);
+        if (p && p.days){
+          state.days = p.days;
+          state.done = p.done || {};
+          state.edits = p.edits || {};
+        }
       }
-    }catch(e){
-      state.weeks = buildDefaultWeeks();
-      try{ await save(); }catch(e2){}
+    }catch(e){}
+    if (!state.days){
+      state.days = buildDefaultDays();
+      applyEdits(state.days);
+      await save();
     }
     render();
   }
 
   async function save(){
     try{
-      localStorage.setItem('chore-tracker-v1', JSON.stringify({weeks:state.weeks, done:state.done, currentWeek:state.currentWeek}));
+      await store.set(STORE_KEY, JSON.stringify({days:state.days, done:state.done, edits:state.edits}));
     }catch(e){ console.error('save failed', e); }
   }
 
@@ -295,29 +290,36 @@
 
   function render(){
     const app = document.getElementById('app');
-    const wk = state.currentWeek;
     let html = '';
-    html += `<h1>Chore tracker</h1>`;
-    html += `<p class="sub">4-week cycle · repeats every month. Hold a chip for a moment, then drag to move it.</p>`;
-    html += `<div class="note">Bathroom deep clean sits in Weeks 2 & 4 based on your cycle timing. Bedsheet change alternates in Weeks 1 & 3 so there's only one big weekend task at a time.</div>`;
-    html += `<div class="weektabs">`;
-    for (let i=1;i<=4;i++){
-      html += `<div class="weektab ${i===wk?'active':''}" data-week="${i}">Week ${i}</div>`;
-    }
-    html += `</div>`;
-    html += `<div class="toolbar"><div class="weeklabel">Week ${wk}</div><div class="resetbtn" id="resetweek">Reset checks this week</div></div>`;
+    html += `<div class="appname">${APP_NAME}</div>`;
+    html += `<div class="mantra" id="mantra">&ldquo;${MANTRAS[state.mantraIdx]}&rdquo;<small>tap for another</small></div>`;
+    html += `<div class="toolbar"><div class="resetbtn" id="resetweek">Reset week</div></div>`;
     html += `<div class="board" id="board">`;
+    const usedCats = {};
     for (const d of DAYS){
-      const tasks = state.weeks[wk][d.key] || [];
+      const tasks = state.days[d.key] || [];
       html += `<div class="day-col" data-day="${d.key}">`;
       html += `<div class="day-head"><span>${d.label}</span><span class="addlink" data-addday="${d.key}">+ add task</span></div>`;
       for (const t of tasks){
-        const cat = CATS[t.cat];
+        usedCats[t.cat] = true;
+        const cat = CATS[t.cat] || CATS.note;
+        if (state.editId === t.id){
+          html += `<div class="addform">
+            <input type="text" id="editLabel" value="${esc(t.label)}" />
+            <select id="editCat">${catOptions(t.cat)}</select>
+            <label class="chk"><input type="checkbox" id="editAll" /> Change everywhere it appears</label>
+            <div class="btns">
+              <span class="cancel" id="cancelEdit">Cancel</span>
+              <span class="save" id="saveEdit" data-id="${t.id}">Save</span>
+            </div>
+          </div>`;
+          continue;
+        }
         const isDone = !!state.done[t.id];
         html += `<div class="chip ${isDone?'done':''}" data-id="${t.id}" style="background:${cat.color}">`;
         html += `<span class="boxwrap" data-id="${t.id}"><span class="box"></span></span>`;
-        html += `<span class="txt">${t.label}</span>`;
-        html += `<span class="del" data-del="${t.id}" data-day="${d.key}">✕</span>`;
+        html += `<span class="txt">${esc(t.label)}</span>`;
+        html += `<span class="del" data-del="${t.id}" data-day="${d.key}">x</span>`;
         html += `</div>`;
       }
       if (state.openAddDay === d.key){
@@ -325,10 +327,9 @@
           <input type="text" id="newTaskLabel" placeholder="Task name" />
           <div class="row">
             <select id="newTaskCat">${catOptions('self')}</select>
-            <select id="newTaskRepeat">
-              <option value="once">Just this week</option>
-              <option value="weekly">Every week (all 4)</option>
-              <option value="fortnightly">Every 2 weeks (alternating)</option>
+            <select id="newTaskType">
+              <option value="temporary">Temporary - clears on reset</option>
+              <option value="permanent">Permanent - stays after reset</option>
             </select>
           </div>
           <div class="btns">
@@ -342,30 +343,36 @@
     html += `</div>`;
     html += `<div class="legend">`;
     for (const key in CATS){
+      if (!usedCats[key]) continue;
       html += `<div class="leg-item"><div class="leg-dot" style="background:${CATS[key].color}"></div>${CATS[key].label}</div>`;
     }
     html += `</div>`;
-    html += `<div class="hint">Hold &amp; drag to move · tap the box to check off · tap ✕ to delete</div>`;
+    html += `<div class="hint">Hold &amp; drag to move - double-tap to edit - tap the box to check off - x to delete</div>`;
     app.innerHTML = html;
     attachHandlers();
+    const ed = document.getElementById('editLabel');
+    if (ed){ ed.focus(); try{ ed.setSelectionRange(ed.value.length, ed.value.length); }catch(e){} }
+  }
+
+  function findTask(id){
+    for (const d of DAYS){
+      const arr = state.days[d.key] || [];
+      const idx = arr.findIndex(t=>t.id===id);
+      if (idx > -1) return {day:d.key, idx, task:arr[idx]};
+    }
+    return null;
   }
 
   function attachHandlers(){
-    document.querySelectorAll('.weektab').forEach(el=>{
-      el.addEventListener('click', async ()=>{
-        state.currentWeek = parseInt(el.dataset.week,10);
-        state.openAddDay = null;
-        await save();
-        render();
-      });
+    const mEl = document.getElementById('mantra');
+    if (mEl) mEl.addEventListener('click', ()=>{
+      state.mantraIdx = (state.mantraIdx + 1) % MANTRAS.length;
+      render();
     });
     document.getElementById('resetweek').addEventListener('click', async ()=>{
-      const wk = state.currentWeek;
-      for (const d of DAYS){
-        (state.weeks[wk][d.key]||[]).forEach(t=>{ delete state.done[t.id]; });
-      }
-      await save();
-      render();
+      const ok = window.confirm("Reset the week?\n\nThis clears every checkmark, removes temporary tasks, puts dragged tasks back on their usual day, and keeps your edits and any Permanent tasks you added.");
+      if (!ok) return;
+      await resetWeek();
     });
     document.querySelectorAll('.boxwrap').forEach(el=>{
       el.addEventListener('click', async (e)=>{
@@ -379,13 +386,11 @@
     document.querySelectorAll('.chip .del').forEach(el=>{
       el.addEventListener('click', async (e)=>{
         e.stopPropagation();
-        const id = el.dataset.del;
-        const day = el.dataset.day;
-        const wk = state.currentWeek;
-        const arr = state.weeks[wk][day] || [];
-        const idx = arr.findIndex(t=>t.id===id);
-        if (idx>-1) arr.splice(idx,1);
-        delete state.done[id];
+        const found = findTask(el.dataset.del);
+        if (found){
+          state.days[found.day].splice(found.idx,1);
+          delete state.done[found.task.id];
+        }
         await save();
         render();
       });
@@ -394,41 +399,70 @@
       el.addEventListener('click', ()=>{
         const day = el.dataset.addday;
         state.openAddDay = (state.openAddDay === day) ? null : day;
+        state.editId = null;
         render();
       });
     });
-    const cancelEl = document.getElementById('cancelAdd');
-    if (cancelEl) cancelEl.addEventListener('click', ()=>{ state.openAddDay = null; render(); });
-    const saveEl = document.getElementById('saveAdd');
-    if (saveEl) saveEl.addEventListener('click', async ()=>{
-      const day = saveEl.dataset.day;
+    const cancelAdd = document.getElementById('cancelAdd');
+    if (cancelAdd) cancelAdd.addEventListener('click', ()=>{ state.openAddDay = null; render(); });
+    const saveAdd = document.getElementById('saveAdd');
+    if (saveAdd) saveAdd.addEventListener('click', async ()=>{
+      const day = saveAdd.dataset.day;
       const label = document.getElementById('newTaskLabel').value.trim();
       const cat = document.getElementById('newTaskCat').value;
-      const repeat = document.getElementById('newTaskRepeat').value;
+      const type = document.getElementById('newTaskType').value;
       if (!label) return;
-      const wk = state.currentWeek;
-      if (repeat === 'once'){
-        if (!state.weeks[wk][day]) state.weeks[wk][day] = [];
-        state.weeks[wk][day].push({id:cid(), cat, label});
-      } else if (repeat === 'weekly'){
-        for (const w of [1,2,3,4]){
-          if (!state.weeks[w][day]) state.weeks[w][day] = [];
-          state.weeks[w][day].push({id:cid(), cat, label});
-        }
-      } else if (repeat === 'fortnightly'){
-        const pair = wk % 2 === 1 ? [1,3] : [2,4];
-        for (const w of pair){
-          if (!state.weeks[w][day]) state.weeks[w][day] = [];
-          state.weeks[w][day].push({id:cid(), cat, label});
-        }
-      }
+      if (!state.days[day]) state.days[day] = [];
+      state.days[day].push({id:cid(), cat, label, origin:"added", temporary: type==='temporary'});
       state.openAddDay = null;
       await save();
       render();
     });
+    const cancelEdit = document.getElementById('cancelEdit');
+    if (cancelEdit) cancelEdit.addEventListener('click', ()=>{ state.editId = null; render(); });
+    const saveEdit = document.getElementById('saveEdit');
+    if (saveEdit) saveEdit.addEventListener('click', async ()=>{
+      const found = findTask(saveEdit.dataset.id);
+      const label = document.getElementById('editLabel').value.trim();
+      const cat = document.getElementById('editCat').value;
+      const all = document.getElementById('editAll').checked;
+      if (!found || !label) return;
+      const oldLabel = found.task.label;
+      const targets = [];
+      if (all){
+        for (const d of DAYS){
+          (state.days[d.key]||[]).forEach(t=>{ if (t.label === oldLabel) targets.push(t); });
+        }
+      } else {
+        targets.push(found.task);
+      }
+      targets.forEach(t=>{
+        t.label = label; t.cat = cat;
+        if (t.origin !== 'added') state.edits[t.id] = {label, cat};
+      });
+      state.editId = null;
+      await save();
+      render();
+    });
+    const editInput = document.getElementById('editLabel');
+    if (editInput) editInput.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){ const b = document.getElementById('saveEdit'); if (b) b.click(); }
+    });
     document.querySelectorAll('.chip').forEach(el=>{
       el.addEventListener('pointerdown', onChipPointerDown);
     });
+  }
+
+  function registerTap(id){
+    const now = Date.now();
+    if (lastTap.id === id && now - lastTap.t < DOUBLE_TAP_MS){
+      lastTap = {id:null, t:0};
+      state.editId = id;
+      state.openAddDay = null;
+      render();
+    } else {
+      lastTap = {id, t:now};
+    }
   }
 
   function onChipPointerDown(e){
@@ -451,8 +485,10 @@
         cleanupPre();
       }
     }
-    function preEnd(){
+    function preEnd(ev){
+      const isTap = ev.type === 'pointerup' && !cancelled;
       cleanupPre();
+      if (isTap) registerTap(chipEl.dataset.id);
     }
 
     document.addEventListener('pointermove', preMove);
@@ -472,66 +508,56 @@
 
     const id = chipEl.dataset.id;
     const rect = chipEl.getBoundingClientRect();
-    const bg = chipEl.style.background;
-    const txt = chipEl.querySelector('.txt').textContent;
-
     const ghost = document.createElement('div');
     ghost.className = 'ghost';
-    ghost.style.background = bg;
+    ghost.style.background = chipEl.style.background;
     ghost.style.left = rect.left+'px';
     ghost.style.top = rect.top+'px';
-    ghost.textContent = txt;
+    ghost.textContent = chipEl.querySelector('.txt').textContent;
     document.body.appendChild(ghost);
-
     chipEl.classList.add('dragging');
 
     const offsetX = startX - rect.left;
     const offsetY = startY - rect.top;
     const sourceDay = chipEl.closest('.day-col').dataset.day;
 
-    let currentDropDay = sourceDay;
-    let currentDropIndex = null;
-    let indicator = document.createElement('div');
+    let dropDay = sourceDay;
+    let dropIndex = null;
+    const indicator = document.createElement('div');
     indicator.className = 'drop-indicator';
 
-    function computeDrop(clientX, clientY){
+    function computeDrop(x, y){
       document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('dragover'));
-      const under = document.elementsFromPoint(clientX, clientY);
-      const col = under.find(x=>x.classList && x.classList.contains('day-col'));
-      if (!col){ indicator.remove(); currentDropDay=null; currentDropIndex=null; return; }
+      const under = document.elementsFromPoint(x, y);
+      const col = under.find(el=>el.classList && el.classList.contains('day-col'));
+      if (!col){ indicator.remove(); dropDay = null; dropIndex = null; return; }
       col.classList.add('dragover');
-      currentDropDay = col.dataset.day;
-
-      const chips = Array.from(col.querySelectorAll('.chip')).filter(c=>c.dataset.id!==id);
-      let insertBeforeEl = null;
+      dropDay = col.dataset.day;
+      const chips = Array.from(col.querySelectorAll('.chip')).filter(c=>c.dataset.id !== id);
+      let before = null;
       for (const c of chips){
         const r = c.getBoundingClientRect();
-        if (clientY < r.top + r.height/2){ insertBeforeEl = c; break; }
+        if (y < r.top + r.height/2){ before = c; break; }
       }
-      if (insertBeforeEl){
-        insertBeforeEl.parentNode.insertBefore(indicator, insertBeforeEl);
-        currentDropIndex = chips.indexOf(insertBeforeEl);
+      if (before){
+        before.parentNode.insertBefore(indicator, before);
+        dropIndex = chips.indexOf(before);
       } else {
         col.appendChild(indicator);
-        currentDropIndex = chips.length;
+        dropIndex = chips.length;
       }
-    }
-
-    function autoScroll(clientY){
-      const threshold = 70;
-      if (clientY < threshold) window.scrollBy(0, -12);
-      else if (clientY > window.innerHeight - threshold) window.scrollBy(0, 12);
     }
 
     function onMove(ev){
       ghost.style.left = (ev.clientX - offsetX)+'px';
       ghost.style.top = (ev.clientY - offsetY)+'px';
       computeDrop(ev.clientX, ev.clientY);
-      autoScroll(ev.clientY);
+      if (ev.clientY < 70) window.scrollBy(0,-12);
+      else if (ev.clientY > window.innerHeight - 70) window.scrollBy(0,12);
       ev.preventDefault();
     }
 
-    function onUp(ev){
+    function onUp(){
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       document.removeEventListener('pointercancel', onUp);
@@ -540,10 +566,7 @@
       ghost.remove();
       chipEl.classList.remove('dragging');
       try{ chipEl.releasePointerCapture(pointerId); }catch(e){}
-
-      if (currentDropDay){
-        moveTask(id, sourceDay, currentDropDay, currentDropIndex);
-      }
+      if (dropDay) moveTask(id, sourceDay, dropDay, dropIndex);
     }
 
     document.addEventListener('pointermove', onMove);
@@ -552,18 +575,35 @@
   }
 
   async function moveTask(id, sourceDay, targetDay, index){
-    const wk = state.currentWeek;
-    const src = state.weeks[wk][sourceDay] || [];
+    const src = state.days[sourceDay] || [];
     const idx = src.findIndex(t=>t.id===id);
     if (idx === -1) return;
     const [task] = src.splice(idx,1);
-    if (!state.weeks[wk][targetDay]) state.weeks[wk][targetDay] = [];
-    const dest = state.weeks[wk][targetDay];
-    let insertAt = (index===null || index===undefined) ? dest.length : index;
-    if (sourceDay === targetDay && idx < insertAt) insertAt -= 1;
-    if (insertAt < 0) insertAt = 0;
-    if (insertAt > dest.length) insertAt = dest.length;
-    dest.splice(insertAt, 0, task);
+    if (!state.days[targetDay]) state.days[targetDay] = [];
+    const dest = state.days[targetDay];
+    let at = (index===null || index===undefined) ? dest.length : index;
+    if (sourceDay === targetDay && idx < at) at -= 1;
+    at = Math.max(0, Math.min(at, dest.length));
+    dest.splice(at, 0, task);
+    await save();
+    render();
+  }
+
+  async function resetWeek(){
+    const keep = [];
+    for (const d of DAYS){
+      (state.days[d.key]||[]).forEach(t=>{
+        if (t.origin === 'added' && t.temporary === false){
+          keep.push({day:d.key, task:{id:t.id, cat:t.cat, label:t.label, origin:t.origin, temporary:false}});
+        }
+      });
+    }
+    state.days = buildDefaultDays();
+    applyEdits(state.days);
+    keep.forEach(k=>{ state.days[k.day].push(k.task); });
+    state.done = {};
+    state.editId = null;
+    state.openAddDay = null;
     await save();
     render();
   }

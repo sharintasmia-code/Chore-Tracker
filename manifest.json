@@ -1,6 +1,6 @@
 {
-  "name": "Chore Tracker",
-  "short_name": "Chores",
+  "name": "Planner",
+  "short_name": "Planner",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#FFF6F9",
